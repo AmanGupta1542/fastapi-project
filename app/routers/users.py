@@ -48,3 +48,12 @@ def logout(user_id: int = Body()):
     token_for_del = CModels.Token.delete().where(CModels.Token.owner_id == user_id)
     token_for_del.execute()
     return {"message": "logout successful"}
+
+@router.get(
+    "/{user_id}", response_model=CSchemas.User, dependencies=[Depends(CDepends.get_db)]
+)
+def read_user(user_id: int):
+    db_user = UserO.get_user_data(user_id=user_id)
+    if db_user is None:
+        raise HTTPException(status_code=404, detail="User not found")
+    return db_user
