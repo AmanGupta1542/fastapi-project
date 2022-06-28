@@ -4,6 +4,8 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
 
+from ..admin import main as admin_root
+
 from .settings import metadata as meta, config
 from .database import database
 from .models.common import User, Token
@@ -37,6 +39,8 @@ app = FastAPI(
     openapi_url = meta.openapi_url
 )
 
+
+app.mount("/admin", admin_root.app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins = meta.origins,
@@ -58,6 +62,12 @@ app.include_router(
 def root():
     return {"message": "working"}
 
+# we can also define admin roots in this file
+# @admin_root.app.get("/sub")
+# def read_sub():
+#     return {"message": "Hello World from sub API"}
+
+    
 # @app.post("/token", response_model=CSchemas.Token)
 # async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
 #     user = user_crud.authenticate_user(form_data.username, form_data.password)
