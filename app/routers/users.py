@@ -37,7 +37,7 @@ def login(login_data: CSchemas.LoginData = Body()):
         if token_time.total_seconds()/60 > 15:
             token_for_del = CModels.Token.delete().where(CModels.Token.owner_id == user.id)
             token_for_del.execute()
-            access_token = UserO.save_access_token
+            access_token = UserO.save_access_token(user, timedelta(minutes=15))
             return {"access_token": access_token, "token_type": "bearer"}
         else:
             return {"access_token": last_created_token, "token_type": "bearer"}
