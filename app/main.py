@@ -7,8 +7,11 @@ from datetime import timedelta
 from .settings import metadata as meta, config
 from .database import database
 from .models.common import User, Token
-from .routers import users, admin, operations
+from .routers import users, admin
+from .routers.operations import user_crud
 from .dependencies import common as CDepends
+from .schemas import common as CSchemas
+
 
 SECRET_KEY = config.settings.secret_key
 ALGORITHM = config.settings.algorithm
@@ -56,3 +59,18 @@ app.include_router(
 @app.get("/")
 def root():
     return {"message": "working"}
+
+@app.post("/token", response_model=CSchemas.Token)
+async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends()):
+    user = user_crud.authenticate_user(form_data.username, form_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Incorrect username or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token = user_crud.create_access_token(
+        data={"sub": user.email}, expires_delta=access_token_expires
+    )
+    return {"access_token": access_token, "token_type": "bearer"}

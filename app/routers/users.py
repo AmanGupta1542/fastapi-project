@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Body
-from typing import List, Union
+from typing import List, Union, Any
 from datetime import datetime, timedelta, timezone
 import pytz
 
@@ -52,8 +52,10 @@ def logout(user_id: int = Body()):
 @router.get(
     "/{user_id}", response_model=CSchemas.User, dependencies=[Depends(CDepends.get_db)]
 )
-def read_user(user_id: int):
+def read_user(user_id: int, current_User: CSchemas.User = Depends(UserO.get_current_active_user)):
     db_user = UserO.get_user_data(user_id=user_id)
     if db_user is None:
         raise HTTPException(status_code=404, detail="User not found")
+    if current_User.id != db_user.id:
+        raise HTTPException(status_code=400, detail="Can't access this user")
     return db_user

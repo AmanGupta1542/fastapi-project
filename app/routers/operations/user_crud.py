@@ -51,7 +51,7 @@ def save_access_token(user, expires_in):
 def get_user_data(user_id: int):
     return CModel.User.filter(CModel.User.id == user_id).first()
 
-async def get_current_user(token: str = Depends()):
+async def get_current_user(token: str = Depends(oauth2_scheme)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
