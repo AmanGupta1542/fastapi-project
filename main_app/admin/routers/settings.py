@@ -3,5 +3,5 @@ from fastapi import APIRouter
 router = APIRouter()
 
 @router.get("/settings")
-def user_details():
+def settings():
     return {"status": "success"}
