@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr, Field
 import peewee
 from pydantic.utils import GetterDict
 from typing import Any, Union
@@ -23,12 +23,14 @@ class Token(BaseModel):
     token_type: str
 
 class UserBase(BaseModel):
-    email: str
+    email: EmailStr
 
 class UserCreate(UserBase):
     firstName: str
     lastName: str
-    password: str
+    password: str = Field(
+        title="Password of the user", min_length=6
+    )
     changedPassword: str
     changedEmail: str
     upline: str
