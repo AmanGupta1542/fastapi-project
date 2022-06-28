@@ -19,15 +19,14 @@ router = APIRouter(
 @router.post("/login", response_model=CSchemas.Token)
 def login(login_data: CSchemas.LoginData = Body()):
     user = UserO.authenticate_user(login_data.email, login_data.password)
-    user_tokens_list = user.token.select().dicts()
-    is_token_exist = True if len(user_tokens_list) > 0 else False
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    access_token_expires = timedelta(minutes=15)
+    user_tokens_list = user.token.select().dicts()
+    is_token_exist = True if len(user_tokens_list) > 0 else False
     if not is_token_exist:
         access_token = UserO.save_access_token(user, timedelta(minutes=15))
         return {"access_token": access_token, "token_type": "bearer"}

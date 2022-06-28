@@ -19,8 +19,11 @@ def verify_password(plain_password, hashed_password):
 
    
 def get_user(email: str):
-    existing_user = CModel.User.get(CModel.User.email == email)
-    return existing_user
+    try:
+        existing_user = CModel.User.get(CModel.User.email == email)
+        return existing_user
+    except:
+        return False
 
 
 def authenticate_user(email: str, password: str, dependencies=[Depends(CDepends.get_db)]):
