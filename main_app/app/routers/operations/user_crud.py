@@ -14,8 +14,8 @@ from ...schemas import common as CSchemas
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 token_auth_scheme = HTTPBearer()
 
-def verify_password(plain_password, hashed_password):
-    return pwd_context.verify(plain_password, hashed_password)
+def verify_password(plain_password, password):
+    return pwd_context.verify(plain_password, password)
 
 def get_password_hash(password):
     return pwd_context.hash(password)
@@ -32,7 +32,7 @@ def authenticate_user(email: str, password: str, dependencies=[Depends(CDepends.
     user = get_user(email)
     if not user:
         return False
-    if not verify_password(password, user.hashed_password):
+    if not verify_password(password, user.password):
         return False
     return user
 
@@ -76,12 +76,27 @@ async def get_current_user(token: str = Depends(token_auth_scheme)):
     return user
 
 async def get_current_active_user(current_user: CSchemas.User = Depends(get_current_user)):
-    if not current_user.is_active:
+    if not current_user.isActive:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 def create_user(user: CSchemas.UserCreate):
     fake_hashed_password = get_password_hash(user.password)
-    db_user = CModel.User(email=user.email, hashed_password=fake_hashed_password, is_active =0, role=2)
+    db_user = CModel.User(
+        firstName= user.firstName,
+        lastName= user.lastName,
+        email=user.email,
+        password=fake_hashed_password,
+        changedPassword= user.changedPassword,
+        changedEmail= user.changedEmail,
+        upline= user.upline,
+        downline= user.downline,
+        tree= user.tree,
+        kyc= user.kyc,
+        product = user.product,
+        marketingCampaign= user.marketingCampaign,
+        isActive =0, 
+        role=2
+        )
     db_user.save()
     return db_user

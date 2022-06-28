@@ -26,11 +26,21 @@ class UserBase(BaseModel):
     email: str
 
 class UserCreate(UserBase):
+    firstName: str
+    lastName: str
     password: str
+    changedPassword: str
+    changedEmail: str
+    upline: str
+    downline: str
+    tree: str
+    kyc: bool
+    product : str
+    marketingCampaign : str
 
 class User(UserBase):
     id: int
-    is_active: bool
+    isActive: bool
 
     class Config:
         orm_mode = True

@@ -5,9 +5,19 @@ import peewee
 from ..database.database import db
 
 class User(peewee.Model):
+    firstName = peewee.CharField(max_length=80)
+    lastName = peewee.CharField(max_length=80)
     email = peewee.CharField(unique=True, index=True)
-    hashed_password = peewee.CharField()
-    is_active = peewee.BooleanField(default=True)
+    password = peewee.CharField()
+    changedPassword = peewee.CharField()
+    changedEmail = peewee.CharField()
+    upline = peewee.CharField()
+    downline = peewee.CharField()
+    tree = peewee.CharField()
+    kyc = peewee.BooleanField()
+    product = peewee.CharField()
+    marketingCampaign = peewee.CharField()
+    isActive = peewee.BooleanField(default=True)
     role = peewee.IntegerField()
     class Meta:
         database = db
