@@ -1,3 +1,4 @@
+from ctypes import cdll
 from fastapi import APIRouter, Depends, HTTPException, status, Body
 from typing import List, Union, Any
 from datetime import datetime, timedelta, timezone
@@ -58,3 +59,10 @@ def read_user(user_id: int, current_User: CSchemas.User = Depends(UserO.get_curr
     if current_User.id != db_user.id:
         raise HTTPException(status_code=400, detail="Can't access this user")
     return db_user
+
+@router.post("/register", response_model=CSchemas.User, dependencies=[Depends(CDepends.get_db)])
+def create_user(user: CSchemas.UserCreate):
+    db_user = UserO.get_user(email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    return UserO.create_user(user=user)

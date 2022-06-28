@@ -17,6 +17,8 @@ token_auth_scheme = HTTPBearer()
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
+def get_password_hash(password):
+    return pwd_context.hash(password)
    
 def get_user(email: str):
     try:
@@ -77,3 +79,9 @@ async def get_current_active_user(current_user: CSchemas.User = Depends(get_curr
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
+
+def create_user(user: CSchemas.UserCreate):
+    fake_hashed_password = get_password_hash(user.password)
+    db_user = CModel.User(email=user.email, hashed_password=fake_hashed_password, is_active =0, role=2)
+    db_user.save()
+    return db_user
