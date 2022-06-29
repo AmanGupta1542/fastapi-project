@@ -4,8 +4,6 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
 
-from ..admin import main as admin_root
-
 from .settings import metadata as meta, config
 from .database import database
 from .models.common import User, Token
@@ -40,7 +38,6 @@ app = FastAPI(
 )
 
 
-app.mount("/admin", admin_root.app)
 app.add_middleware(
     CORSMiddleware,
     allow_origins = meta.origins,

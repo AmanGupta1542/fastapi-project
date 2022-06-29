@@ -22,3 +22,6 @@ class User(UserBase):
         orm_mode = True
         getter_dict = PeeweeGetterDict
     
+class ChangePass(BaseModel):
+    oldPassword: str = Field(min_length=6)
+    newPassword: str = Field(min_length=6)
