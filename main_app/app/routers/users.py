@@ -1,3 +1,4 @@
+import csv
 from fastapi import APIRouter, Depends, HTTPException, Path, status, Body, BackgroundTasks
 from fastapi_mail import FastMail, MessageSchema
 from fastapi.requests import Request
@@ -70,12 +71,9 @@ def create_user(user: CSchemas.UserCreate):
         raise HTTPException(status_code=400, detail="Email already registered")
     return UserO.create_user(user=user)
 
-class K(BaseModel):
-    email: EmailStr
-
 @router.post("/forget-password")
-async def forget_password(request: Request, background_tasks: BackgroundTasks, email: str):
-    db_user = UserO.get_user(email=email)
+async def forget_password(request: Request, background_tasks: BackgroundTasks, data: CSchemas.UserBase):
+    db_user = UserO.get_user(email=data.email)
     if not db_user:
         # raise HTTPException(status_code=400, detail="Email not found")
         return {"status": "error", "message": "Email not found"}
@@ -86,7 +84,7 @@ async def forget_password(request: Request, background_tasks: BackgroundTasks, e
             create_token.save()
             message = MessageSchema(
                 subject="Reset Your Password",
-                recipients=[email],  # List of recipients, as many as you can pass 
+                recipients=[data.email],  # List of recipients, as many as you can pass 
                 # body="<a href='http://127.0.0.1:8000/api/reset-password/"+token+"'>Click Here</a>",
                 body="{}/api/reset-password/{}".format(request.client.host, token),
                 subtype="html"
@@ -99,7 +97,7 @@ async def forget_password(request: Request, background_tasks: BackgroundTasks, e
             return {"status": "error", "message": "Something went wrong"}
 
 @router.patch("/reset-password/{token}")
-def reset_password(token: str = Path(max_length=24), password: str = Body(min_length=6)):
+def reset_password(data: CSchemas.ResetPassword, token: str = Path(max_length=24)):
     try:
         user_token = CModels.ResetPasswordToken.get(CModels.ResetPasswordToken.token == token)
     except:
@@ -109,7 +107,7 @@ def reset_password(token: str = Path(max_length=24), password: str = Body(min_le
         return {"status": "error", "message": "Token expires"}
     else:
         user = UserO.get_user_by_id(user_token.owner)
-        user.password = UserO.get_password_hash(password)
+        user.password = UserO.get_password_hash(data.password)
         user.save()
         user_token.isExpire = True
         user_token.save()
