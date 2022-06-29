@@ -1,4 +1,4 @@
-from fastapi import Depends, FastAPI, HTTPException, status
+from fastapi import Depends, FastAPI, HTTPException, status, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -6,7 +6,7 @@ from datetime import timedelta
 
 from .settings import metadata as meta, config
 from .database import database
-from .models.common import User, Token
+from .models.common import *
 from .routers import users, admin
 from .routers.operations import user_crud
 from .dependencies import common as CDepends
@@ -18,7 +18,7 @@ ALGORITHM = config.settings.algorithm
 ACCESS_TOKEN_EXPIRE_MINUTES = int(config.settings.access_token_expire_minutes)
 
 database.db.connect()
-database.db.create_tables([User, Token])
+database.db.create_tables([User, Token, MailConfig, DatabaseConfig, ResetPasswordToken])
 database.db.close()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")

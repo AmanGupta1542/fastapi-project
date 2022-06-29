@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from jose import jwt, JWTError
 from passlib.context import CryptContext
 from fastapi.security import HTTPBearer  
+import string, random
 
 from ...settings import config
 from ...dependencies import common as CDepends
@@ -13,6 +14,9 @@ from ...schemas import common as CSchemas
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 token_auth_scheme = HTTPBearer()
+
+def reset_password_token(size=24, chars=string.ascii_lowercase + string.digits):
+    return ''.join(random.choice(chars) for _ in range(size))
 
 def verify_password(plain_password, password):
     return pwd_context.verify(plain_password, password)
@@ -23,6 +27,13 @@ def get_password_hash(password):
 def get_user(email: str):
     try:
         existing_user = CModel.User.get(CModel.User.email == email)
+        return existing_user
+    except:
+        return False
+
+def get_user_by_id(id: int):
+    try:
+        existing_user = CModel.User.get(CModel.User.id == id)
         return existing_user
     except:
         return False

@@ -25,7 +25,36 @@ class User(peewee.Model):
 class Token(peewee.Model):
     owner = peewee.ForeignKeyField(User, backref="token")
     token = peewee.CharField(index=True)
-    created_at = peewee.DateTimeField(default=datetime.now())
+    createdAt = peewee.DateTimeField(default=datetime.now())
+
+    class Meta:
+        database = db
+    
+class ResetPasswordToken(peewee.Model):
+    owner = peewee.ForeignKeyField(User, on_delete="CASCADE")
+    token = peewee.CharField(index=True)
+    createdAt = peewee.DateTimeField(default=datetime.now())
+    isExpire = peewee.BooleanField(default=False)
+
+    class Meta:
+        database = db
+
+class MailConfig(peewee.Model):
+    username= peewee.CharField()
+    password= peewee.CharField()
+    port= peewee.IntegerField()
+    server= peewee.CharField()
+    tls= peewee.BooleanField()
+    ssl= peewee.BooleanField()
+    class Meta:
+        database = db
+
+class DatabaseConfig(peewee.Model):
+    DBName = peewee.CharField(),
+    username = peewee.CharField()
+    password = peewee.CharField()
+    host = peewee.CharField()
+    port = peewee.IntegerField()
 
     class Meta:
         database = db

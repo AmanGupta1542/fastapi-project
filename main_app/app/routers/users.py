@@ -1,8 +1,11 @@
-from ctypes import cdll
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Depends, HTTPException, Path, status, Body, BackgroundTasks
+from fastapi_mail import FastMail, MessageSchema
+from fastapi.requests import Request
 from typing import List, Union, Any
 from datetime import datetime, timedelta, timezone
+from pydantic import EmailStr
 import pytz
+from pydantic import BaseModel
 
 from ..dependencies import common as CDepends
 from ..schemas import common as CSchemas
@@ -33,7 +36,7 @@ def login(login_data: CSchemas.LoginData = Body()):
         return {"access_token": access_token, "token_type": "bearer"}
     else:
         last_created_token = user_tokens_list[-1]['token']
-        token_time = datetime.now(timezone.utc) - user_tokens_list[-1]['created_at'].astimezone(pytz.UTC)
+        token_time = datetime.now(timezone.utc) - user_tokens_list[-1]['createdAt'].astimezone(pytz.UTC)
 
         if token_time.total_seconds()/60 > 15:
             token_for_del = CModels.Token.delete().where(CModels.Token.owner_id == user.id)
@@ -66,3 +69,48 @@ def create_user(user: CSchemas.UserCreate):
     if db_user:
         raise HTTPException(status_code=400, detail="Email already registered")
     return UserO.create_user(user=user)
+
+class K(BaseModel):
+    email: EmailStr
+
+@router.post("/forget-password")
+async def forget_password(request: Request, background_tasks: BackgroundTasks, email: str):
+    db_user = UserO.get_user(email=email)
+    if not db_user:
+        # raise HTTPException(status_code=400, detail="Email not found")
+        return {"status": "error", "message": "Email not found"}
+    else:
+        try:
+            token = UserO.reset_password_token()
+            create_token = CModels.ResetPasswordToken(owner = db_user, token= token)
+            create_token.save()
+            message = MessageSchema(
+                subject="Reset Your Password",
+                recipients=[email],  # List of recipients, as many as you can pass 
+                # body="<a href='http://127.0.0.1:8000/api/reset-password/"+token+"'>Click Here</a>",
+                body="{}/api/reset-password/{}".format(request.client.host, token),
+                subtype="html"
+                )
+            fm = FastMail(config.conf)
+            background_tasks.add_task(fm.send_message,message)
+
+            return {"status": "success", "message": "Reset password link sent to your email"}
+        except: 
+            return {"status": "error", "message": "Something went wrong"}
+
+@router.patch("/reset-password/{token}")
+def reset_password(token: str = Path(max_length=24), password: str = Body(min_length=6)):
+    try:
+        user_token = CModels.ResetPasswordToken.get(CModels.ResetPasswordToken.token == token)
+    except:
+        return {"status": "error", "message": "Invalid Token"}
+
+    if (datetime.now() - user_token.createdAt).days >= 1 or user_token.isExpire:
+        return {"status": "error", "message": "Token expires"}
+    else:
+        user = UserO.get_user_by_id(user_token.owner)
+        user.password = UserO.get_password_hash(password)
+        user.save()
+        user_token.isExpire = True
+        user_token.save()
+        return {"status": "success", "message": "Password reset successfully"}
