@@ -1,3 +1,6 @@
+from telnetlib import TLS
+from xmlrpc.client import ProtocolError
+from click import password_option
 from pydantic import BaseModel, EmailStr, Field
 import peewee
 from pydantic.utils import GetterDict
@@ -25,3 +28,18 @@ class User(UserBase):
 class ChangePass(BaseModel):
     oldPassword: str = Field(min_length=6)
     newPassword: str = Field(min_length=6)
+
+class EmailConfig(BaseModel):
+    id: int
+    username: str
+    password: str
+    fromEmail: str
+    port: int
+    server: str
+    tls: bool
+    ssl: bool
+    use_credentials: bool
+    validate_certs: bool
+    class Config:
+        orm_mode = True
+        getter_dict = PeeweeGetterDict

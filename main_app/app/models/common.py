@@ -42,10 +42,13 @@ class ResetPasswordToken(peewee.Model):
 class MailConfig(peewee.Model):
     username= peewee.CharField()
     password= peewee.CharField()
+    fromEmail = peewee.CharField()
     port= peewee.IntegerField()
     server= peewee.CharField()
     tls= peewee.BooleanField()
     ssl= peewee.BooleanField()
+    use_credentials = peewee.BooleanField()
+    validate_certs = peewee.BooleanField()
     class Meta:
         database = db
 
